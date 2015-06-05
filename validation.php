@@ -6,6 +6,7 @@ $fixtures = get_fixtures();
 check__game_count($fixtures, 4);
 check__possible_matches($fixtures);
 check__consecutive_games($fixtures, 1);
+check__a_vs_b($fixtures);
 // TODO Check teams games are all in the same group?
 
 /**
@@ -138,6 +139,16 @@ function check__consecutive_games($fixtures, $min_gap = 0) {
 
 }
 
+function check__a_vs_b($fixtures) {
+  foreach ($fixtures as $round_no => $round) {
+    foreach ($round as $pitch_no => $game) {
+      if ($game['t1'] !== $game['t2'] && _get_team_base_name($game['t1']) == _get_team_base_name($game['t2'])) {
+        error("{$game['grouping']} - {$game['t1']} plays {$game['t2']}.");
+      }
+    }
+  }
+}
+
 function _find_team_in_round($round, $grouping, $search_team) {
 
   foreach ($round as $pitch_no => $game) {
@@ -154,6 +165,16 @@ function _find_team_in_round($round, $grouping, $search_team) {
 
 function _get_teams($game) {
   return array('t1' => $game['t1'], 't2' => $game['t2']);
+}
+
+function _get_team_base_name($name) {
+  $name = trim($name);
+  // Match the entire team name, if it ends up with a space and a capital
+  // letter.
+  if (preg_match('/^(.*)\s+([A-Za-z])$/', $name, $matches)) {
+    return $matches[1];
+  }
+  return $name;
 }
 
 function error($message) {
