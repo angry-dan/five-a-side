@@ -6,6 +6,7 @@ $fixtures = get_fixtures();
 check__game_count($fixtures, 4);
 check__possible_matches($fixtures);
 check__consecutive_games($fixtures, 1);
+// TODO Check teams games are all in the same group?
 
 /**
  * Read the fixtures from the CSV file.
@@ -26,6 +27,11 @@ function get_fixtures() {
 
     foreach ($games as $i => $game) {
       $pitch_no = $i + 1;
+
+      if (!array_filter($game)) {
+        error("Pitch $pitch_no is empty in round $round");
+        continue;
+      }
 
       $fixtures[$round][$pitch_no] = array(
         'grouping' => $game[0],
