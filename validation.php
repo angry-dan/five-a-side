@@ -7,6 +7,7 @@ check__game_count($fixtures, 4);
 check__possible_matches($fixtures);
 check__consecutive_games($fixtures, 1);
 check__a_vs_b($fixtures);
+check__duplicates($fixtures);
 // TODO Check teams games are all in the same group?
 
 /**
@@ -73,7 +74,7 @@ function check__game_count($fixtures, $required_games) {
   foreach ($checker as $group => $teams) {
     foreach ($teams as $team_name => $game_count) {
       if ($game_count != $required_games) {
-        error('group ' . $group . ', "' . $team_name . '" only has ' . $game_count . ' games.');
+        error("$group - " . $team_name . ' has ' . $game_count . ' games');
       }
     }
   }
@@ -143,7 +144,41 @@ function check__a_vs_b($fixtures) {
   foreach ($fixtures as $round_no => $round) {
     foreach ($round as $pitch_no => $game) {
       if ($game['t1'] !== $game['t2'] && _get_team_base_name($game['t1']) == _get_team_base_name($game['t2'])) {
-        error("{$game['grouping']} - {$game['t1']} plays {$game['t2']}.");
+        error("{$game['grouping']} - {$game['t1']} plays {$game['t2']} in round $round_no");
+      }
+    }
+  }
+}
+
+function check__duplicates($fixtures) {
+  foreach ($fixtures as $round_no1 => $round1) {
+    foreach ($round1 as $pitch_no1 => $game1) {
+      foreach ($fixtures as $round_no2 => $round2) {
+        foreach ($round2 as $pitch_no2 => $game2) {
+
+          // Don't check the same fixture against itself.
+          if ($round_no1 === $round_no2 && $pitch_no1 === $pitch_no2) {
+            continue;
+          }
+
+          // Don't repeat the same checks.
+          if ($round_no1 >= $round_no2) {
+            continue;
+          }
+
+          // Don't check matches across groups.
+          if ($game1['grouping'] !== $game2['grouping']) {
+            continue;
+          }
+
+          $match =
+            ($game1['t1'] == $game2['t1'] || $game1['t1'] == $game2['t2'])
+            && ($game1['t2'] == $game2['t1'] || $game1['t2'] == $game2['t2']);
+
+          if ($match) {
+            error("{$game1['grouping']} - {$game1['t1']} plays {$game1['t2']} in round $round_no1 and again in $round_no2");
+          }
+        }
       }
     }
   }
